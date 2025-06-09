@@ -1,0 +1,153 @@
+---
+title: "Article Title"
+subtitle: "Journal"
+author: "Flavio Lozano-Isla"
+format:
+  html:
+    toc: true
+    toc-location: left
+    number-sections: true
+    self-contained: true
+    output-file: "ESM_1"
+editor_options: 
+  chunk_output_type: console
+execute: 
+  warning: false
+---
+
+# Setup
+
+```{r}
+#| label:  setup
+
+source("http://inkaverse.com/docs.r")
+cat("Project: ", getwd())
+library(gridGraphics)
+
+setup <- tempfile(fileext = ".r")
+readLines(con = 'https://inkaverse.com/docs.r') |> 
+  gsub("echo = FALSE", "echo = TRUE", x = _) |>
+  writeLines(setup)
+source(setup)
+
+sessionInfo()
+```
+
+# Figuras
+```{r}
+# base R
+p1 <- function(){
+  par(
+    mar = c(3, 3, 1, 1), 
+    mgp = c(2, 1, 0)
+  )
+  boxplot(mpg ~ cyl, xlab = "cyl", ylab = "mpg", data = mtcars)
+}
+
+# ggplot2
+p2 <- ggplot(data = mtcars, aes(factor(cyl), mpg)) + geom_boxplot()
+
+# lattice
+library(lattice)
+p3 <- bwplot(~mpg | cyl, data = mtcars)
+
+# elementary grid graphics objects
+library(grid)
+p4 <- circleGrob(r = 0.3, gp = gpar(fill = "skyblue"))
+
+# combine all into one plot
+plot <- list(p1, p2, p3, p4) %>% 
+  plot_grid(plotlist= .
+          , rel_heights = c(1, 1)
+          , labels = "AUTO"
+          , nrow = 2
+          )
+
+plot %>% ggsave2(plot= .
+                 , filename = "Figure-01."
+                 , units = "cm"
+                 , width = 20
+                 , height = 20
+                 , )
+```
+
+
+
+
+
+
+
+
+## Importar
+
+```{r}
+plot01 <- image_read("fig1.png") %>% grid::rasterGrob()
+plot02 <- readPNG("fig2.png") %>% grid::rasterGrob()
+plot03 <- readPNG("fig3.png") %>% grid::rasterGrob()
+```
+
+## Grid plots
+
+```{r}
+
+top <- list(plot01, plot02) %>% 
+  plot_grid(plotlist = . , labels = "auto")
+
+plot <- list(top, plot03) %>% 
+  plot_grid(plotlist = . 
+               , nrow = 2
+               , labels = c("", "c"))
+plot
+
+plot %>% ggsave2(plot= .
+                 , filename = "grid-01."
+                 , units = "cm"
+                 , width = 20
+                 , height = 20
+                 , )
+
+  
+  
+  
+plot <- list(plot01, plot02, plot03) %>% 
+  plot_grid(plotlist = .
+            , nrow = 2
+            , labels = "AUTO"
+            )
+
+plot
+```
+
+## Guardar figura
+
+```{r}
+plot %>% 
+  ggsave2(filename = "Fig01.pdf"
+          , plot = .
+          , dpi = 300
+          , width = 20
+          , height = 10
+          , units = "cm"
+          )
+```
+
+## PDF to TIFF
+
+```{r}
+pdf2tiff <- list.files(".", pattern = "Fig.*pdf", full.names = T) 
+
+imgs <- 1:length(pdf2tiff) %>% map(\(x) {
+  
+  filename <- pdf2tiff[x] %>% gsub(".pdf", "\\1.tiff", .) 
+  
+  pdf2tiff[x] %>% 
+    image_read_pdf() %>% 
+    image_write(format = "tiff", filename)
+  
+})
+```
+
+
+
+
+
